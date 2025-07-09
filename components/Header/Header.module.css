@@ -1,0 +1,33 @@
+.navigation {
+  list-style-type: none;
+  margin: 0;
+  padding: 1rem 2rem;
+  display: flex;
+  gap: 1rem;
+  background-color: #333;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navigation a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.navigation a:hover {
+  color: #ddd;
+}
+
+.navigation li a {
+  text-decoration: none;
+  color: white;
+  font-size: 1rem;
+}
+
+.navigation li a:hover {
+  color: #ddd;
+}
