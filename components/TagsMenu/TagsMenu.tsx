@@ -4,36 +4,32 @@ import Link from "next/link";
 import css from "./TagsMenu.module.css";
 import { useState } from "react";
 
-const tags: string[] = ["Work", "Personal", "Meeting", "Shopping", "Todo"];
+const tags = ["All", "Todo", "Work", "Personal", "Meeting", "Shopping"];
 
-export default function TagsMenu() {
-  const [isOpen, setIsOpen] = useState(false);
-  function toggle() {
-    setIsOpen(!isOpen);
-  }
+const TagsMenu = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen((prevState) => !prevState);
+  };
+
+  const handleTagClick = () => {
+    setIsMenuOpen(false);
+  };
 
   return (
     <div className={css.menuContainer}>
-      <button className={css.menuButton} onClick={toggle}>
+      <button className={css.menuButton} onClick={toggleMenu}>
         Notes ▾
       </button>
-      {isOpen && (
+      {isMenuOpen && (
         <ul className={css.menuList}>
-          <li className={css.menuItem}>
-            <Link
-              href={`/notes/filter/all`}
-              className={css.menuLink}
-              onClick={toggle}
-            >
-              All notes
-            </Link>
-          </li>
           {tags.map((tag) => (
-            <li className={css.menuItem} key={tag}>
+            <li key={tag} className={css.menuItem}>
               <Link
                 href={`/notes/filter/${tag}`}
+                onClick={handleTagClick}
                 className={css.menuLink}
-                onClick={toggle}
               >
                 {tag}
               </Link>
@@ -43,4 +39,6 @@ export default function TagsMenu() {
       )}
     </div>
   );
-}
+};
+
+export default TagsMenu;

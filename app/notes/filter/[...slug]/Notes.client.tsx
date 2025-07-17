@@ -1,82 +1,74 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import css from "./NotesPage.module.css";
-import { useState } from "react";
+import React, { useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
-import Loader from "@/app/loading";
-import { fetchNotes } from "@/lib/api";
+import NoteList from "@/components/NoteList/NoteList";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
-import NoteList from "@/components/NoteList/NoteList";
-import NoteModal from "@/components/Modal/Modal";
-import { FetchNotesValues } from "@/types/note";
+import Modal from "@/components/Modal/Modal";
+import { fetchNotes, NotesResponse } from "@/lib/api";
+import NoteForm from "@/components/NoteForm/NoteForm";
 
-interface NotesClientProps {
-  initialQuery: string;
-  initialPage: number;
-  initialTag?: string;
-  initialData: FetchNotesValues | undefined;
-}
+type NotesClientProps = {
+  initialData: NotesResponse;
+  tag?: string;
+};
 
-export default function NotesClient({
-  initialQuery,
-  initialPage,
-  initialTag,
-  initialData,
-}: NotesClientProps) {
-  const [query, setQuery] = useState<string>(initialQuery);
-  const [currentPage, setCurrentPage] = useState<number>(initialPage);
-  const [debounceQuery] = useDebounce(query, 500);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+const NotesClient = ({ initialData, tag }: NotesClientProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
-  const { data, isLoading, isSuccess } = useQuery({
-    queryKey: ["notes", debounceQuery, initialTag, currentPage],
+  const { data } = useQuery({
+    queryKey: ["notes", debouncedSearchQuery, currentPage, tag],
     queryFn: () =>
       fetchNotes(
-        debounceQuery || ``,
+        debouncedSearchQuery || "",
         currentPage,
-        initialTag === `all` ? `` : initialTag
+        tag === "all" ? "" : tag
       ),
     placeholderData: keepPreviousData,
-    refetchOnMount: false,
-    initialData,
+    initialData:
+      currentPage === 1 && !debouncedSearchQuery ? initialData : undefined,
   });
 
-  function toggleModal() {
-    setIsModalOpen(!isModalOpen);
-  }
-  function closeModal() {
-    setIsModalOpen(false);
-  }
-
-  const notesRequest = data?.notes ?? [];
-  const totalPage = data?.totalPages ?? 1;
-
-  function handleChange(newQuery: string) {
-    setQuery(newQuery);
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
     setCurrentPage(1);
-  }
+  };
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div className={css.app}>
-      <div className={css.toolbar}>
-        <SearchBox value={query} onChange={handleChange} />
-        {totalPage > 1 && (
+      <header className={css.toolbar}>
+        <SearchBox searchQuery={searchQuery} onChange={handleSearch} />
+        {data && data.totalPages > 1 && (
           <Pagination
-            pageCount={totalPage}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
+            totalPages={data.totalPages}
           />
         )}
-        <button className={css.button} onClick={toggleModal}>
+        <button className={css.button} onClick={openModal}>
           Create note +
         </button>
-      </div>
-
-      {isLoading && <Loader />}
-      {isSuccess && <NoteList notes={notesRequest} />}
-      {isModalOpen && <NoteModal onClose={closeModal} />}
+      </header>
+      {data?.notes && data.notes.length > 0 && <NoteList notes={data.notes} />}
+      {isModalOpen && (
+        <Modal onClose={closeModal}>
+          <NoteForm onClose={closeModal} />
+        </Modal>
+      )}
     </div>
   );
-}
+};
+
+export default NotesClient;

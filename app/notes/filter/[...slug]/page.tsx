@@ -1,25 +1,20 @@
 import { fetchNotes } from "@/lib/api";
 import NotesClient from "./Notes.client";
 
-interface NotesProps {
+type Props = {
   params: Promise<{ slug: string[] }>;
-}
+};
 
-export const revalidate = 60;
-
-export default async function Notes({ params }: NotesProps) {
-  const initialQuery = "";
-  const initialPage = 1;
+const NotesByCategory = async ({ params }: Props) => {
   const { slug } = await params;
-  const tag = slug[0] === "all" ? undefined : slug[0];
-  const data = await fetchNotes(initialQuery, initialPage, tag);
+  const category = slug[0] === "all" ? undefined : slug[0];
+  const data = await fetchNotes("", 1, category);
 
   return (
-    <NotesClient
-      initialQuery={initialQuery}
-      initialPage={initialPage}
-      initialTag={tag}
-      initialData={data}
-    />
+    <div>
+      <NotesClient initialData={data} tag={category} />
+    </div>
   );
-}
+};
+
+export default NotesByCategory;
